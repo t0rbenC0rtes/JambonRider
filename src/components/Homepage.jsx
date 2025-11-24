@@ -8,7 +8,7 @@ const Homepage = () => {
     <div className="homepage">
       <div className="homepage-content">
         <img 
-          src="./public/img/Jambon.jpg" 
+          src="/img/Jambon.jpg" 
           alt="JambonRider Logo" 
           className="homepage-logo"
         />

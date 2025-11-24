@@ -20,7 +20,7 @@ const LoadNavbar = () => {
       <div className="navbar-content">
         <div className="navbar-brand">
           <img 
-            src="./img/Jambon.jpg" 
+            src="/img/Jambon.jpg" 
             alt="JambonRider" 
             className="navbar-logo"
           />

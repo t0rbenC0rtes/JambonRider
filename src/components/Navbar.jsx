@@ -29,7 +29,7 @@ const Navbar = () => {
       <div className="navbar-content">
         <div className="navbar-brand" onClick={() => navigate('/admin/bags')} style={{ cursor: 'pointer' }}>
           <img 
-            src="./public/img/Jambon.jpg" 
+            src="/img/Jambon.jpg" 
             alt="JambonRider" 
             className="navbar-logo"
           />
