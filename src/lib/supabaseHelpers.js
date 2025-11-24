@@ -1,6 +1,74 @@
 import { supabase, useSupabase } from './supabase';
+import { compressImage, generateUniqueFilename } from './imageCompression';
+
+// ============= STORAGE =============
+
+const BUCKET_NAME = 'item-photos';
+
+/**
+ * Upload an image to Supabase Storage with compression
+ * @param {File} file - Image file to upload
+ * @returns {Promise<string>} - Public URL of uploaded image
+ */
+export const uploadItemPhoto = async (file) => {
+  if (!useSupabase()) return null;
+  
+  try {
+    // Compress the image
+    const compressedBlob = await compressImage(file, 1200, 1200, 0.8);
+    
+    // Generate unique filename
+    const filename = generateUniqueFilename(file.name);
+    
+    // Upload to Supabase Storage
+    const { data, error } = await supabase.storage
+      .from(BUCKET_NAME)
+      .upload(filename, compressedBlob, {
+        contentType: 'image/jpeg',
+        cacheControl: '3600',
+        upsert: false
+      });
+    
+    if (error) throw error;
+    
+    // Get public URL
+    const { data: { publicUrl } } = supabase.storage
+      .from(BUCKET_NAME)
+      .getPublicUrl(filename);
+    
+    return publicUrl;
+  } catch (error) {
+    console.error('Error uploading image:', error);
+    throw error;
+  }
+};
+
+/**
+ * Delete an image from Supabase Storage
+ * @param {string} photoUrl - URL of the image to delete
+ */
+export const deleteItemPhoto = async (photoUrl) => {
+  if (!useSupabase() || !photoUrl) return;
+  
+  try {
+    // Extract filename from URL
+    const url = new URL(photoUrl);
+    const pathParts = url.pathname.split('/');
+    const filename = pathParts[pathParts.length - 1];
+    
+    const { error } = await supabase.storage
+      .from(BUCKET_NAME)
+      .remove([filename]);
+    
+    if (error) throw error;
+  } catch (error) {
+    console.error('Error deleting image:', error);
+    // Don't throw - deletion failure shouldn't block other operations
+  }
+};
 
 // ============= BAGS =============
+
 
 export const fetchBags = async () => {
   if (!useSupabase()) return null;

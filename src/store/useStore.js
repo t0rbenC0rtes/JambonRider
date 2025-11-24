@@ -180,9 +180,24 @@ export const useStore = create((set, get) => ({
     set({ isLoading: true, error: null });
     
     try {
+      let photoUrl = null;
+      
+      // Upload photo if provided
+      if (item.photoFile && useSupabase()) {
+        photoUrl = await supabaseHelpers.uploadItemPhoto(item.photoFile);
+      }
+      
       if (useSupabase()) {
         // Use Supabase
-        const newItem = await supabaseHelpers.createItem(bagId, item);
+        const itemData = {
+          name: item.name,
+          quantity: item.quantity || 1,
+          description: item.description || '',
+          tags: item.tags || [],
+          photo: photoUrl
+        };
+        
+        const newItem = await supabaseHelpers.createItem(bagId, itemData);
         set((state) => ({
           bags: state.bags.map(bag => {
             if (bag.id === bagId) {
@@ -233,9 +248,30 @@ export const useStore = create((set, get) => ({
   
   updateItem: async (bagId, itemId, updates) => {
     try {
+      let photoUrl = updates.photo;
+      
+      // Upload new photo if provided
+      if (updates.photoFile && useSupabase()) {
+        // Delete old photo if exists
+        const bag = get().getBagById(bagId);
+        const existingItem = bag?.items.find(i => i.id === itemId);
+        if (existingItem?.photo) {
+          await supabaseHelpers.deleteItemPhoto(existingItem.photo);
+        }
+        
+        // Upload new photo
+        photoUrl = await supabaseHelpers.uploadItemPhoto(updates.photoFile);
+      }
+      
+      // Remove photoFile from updates and add photoUrl
+      const { photoFile, ...finalUpdates } = updates;
+      if (photoUrl !== undefined) {
+        finalUpdates.photo = photoUrl;
+      }
+      
       if (useSupabase()) {
         // Update in Supabase
-        await supabaseHelpers.updateItem(itemId, updates);
+        await supabaseHelpers.updateItem(itemId, finalUpdates);
         // Local state will update via realtime subscription
         set((state) => ({
           bags: state.bags.map(bag => {
@@ -243,7 +279,7 @@ export const useStore = create((set, get) => ({
               return {
                 ...bag,
                 items: bag.items.map(item => 
-                  item.id === itemId ? { ...item, ...updates } : item
+                  item.id === itemId ? { ...item, ...finalUpdates } : item
                 )
               };
             }
@@ -258,7 +294,7 @@ export const useStore = create((set, get) => ({
               return {
                 ...bag,
                 items: bag.items.map(item => 
-                  item.id === itemId ? { ...item, ...updates } : item
+                  item.id === itemId ? { ...item, ...finalUpdates } : item
                 )
               };
             }
@@ -276,6 +312,15 @@ export const useStore = create((set, get) => ({
   
   deleteItem: async (bagId, itemId) => {
     try {
+      // Delete photo if exists
+      if (useSupabase()) {
+        const bag = get().getBagById(bagId);
+        const item = bag?.items.find(i => i.id === itemId);
+        if (item?.photo) {
+          await supabaseHelpers.deleteItemPhoto(item.photo);
+        }
+      }
+      
       if (useSupabase()) {
         // Delete from Supabase
         await supabaseHelpers.deleteItem(itemId);

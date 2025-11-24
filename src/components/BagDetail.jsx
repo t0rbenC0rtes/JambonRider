@@ -220,23 +220,56 @@ const AddItemModal = ({ bagId, onClose }) => {
   const [quantity, setQuantity] = useState(1);
   const [description, setDescription] = useState('');
   const [tagsInput, setTagsInput] = useState('');
+  const [photoFile, setPhotoFile] = useState(null);
+  const [photoPreview, setPhotoPreview] = useState(null);
+  const [isUploading, setIsUploading] = useState(false);
   const { addItem } = useStore();
   
-  const handleSubmit = (e) => {
+  const handlePhotoChange = (e) => {
+    const file = e.target.files[0];
+    if (file && file.type.startsWith('image/')) {
+      setPhotoFile(file);
+      
+      // Create preview
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setPhotoPreview(reader.result);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+  
+  const handleRemovePhoto = () => {
+    setPhotoFile(null);
+    setPhotoPreview(null);
+  };
+  
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (name.trim()) {
-      const tags = tagsInput
-        .split(',')
-        .map(tag => tag.trim())
-        .filter(tag => tag.length > 0);
+      setIsUploading(true);
       
-      addItem(bagId, {
-        name: name.trim(),
-        quantity: parseInt(quantity) || 1,
-        description: description.trim(),
-        tags
-      });
-      onClose();
+      try {
+        const tags = tagsInput
+          .split(',')
+          .map(tag => tag.trim())
+          .filter(tag => tag.length > 0);
+        
+        await addItem(bagId, {
+          name: name.trim(),
+          quantity: parseInt(quantity) || 1,
+          description: description.trim(),
+          tags,
+          photoFile // Pass the file for upload
+        });
+        
+        onClose();
+      } catch (error) {
+        console.error('Error adding item:', error);
+        alert('Erreur lors de l\'ajout de l\'objet');
+      } finally {
+        setIsUploading(false);
+      }
     }
   };
   
@@ -256,6 +289,36 @@ const AddItemModal = ({ bagId, onClose }) => {
               autoFocus
               required
             />
+          </div>
+          
+          <div className="form-group">
+            <label className="form-label">Photo</label>
+            {photoPreview ? (
+              <div className="photo-preview-container">
+                <img src={photoPreview} alt="Preview" className="photo-preview" />
+                <button 
+                  type="button" 
+                  onClick={handleRemovePhoto}
+                  className="photo-remove-btn"
+                >
+                  ✕
+                </button>
+              </div>
+            ) : (
+              <div className="photo-upload-container">
+                <label htmlFor="photo-upload" className="photo-upload-label">
+                  📷 Choisir une photo
+                </label>
+                <input
+                  id="photo-upload"
+                  type="file"
+                  accept="image/*"
+                  capture="environment"
+                  onChange={handlePhotoChange}
+                  className="photo-upload-input"
+                />
+              </div>
+            )}
           </div>
           
           <div className="form-group">
@@ -292,10 +355,20 @@ const AddItemModal = ({ bagId, onClose }) => {
           </div>
           
           <div style={{ display: 'flex', gap: 'var(--spacing-md)', marginTop: 'var(--spacing-lg)' }}>
-            <button type="submit" className="primary" style={{ flex: 1 }}>
-              Créer
+            <button 
+              type="submit" 
+              className="primary" 
+              style={{ flex: 1 }}
+              disabled={isUploading}
+            >
+              {isUploading ? 'Upload...' : 'Créer'}
             </button>
-            <button type="button" onClick={onClose} style={{ flex: 1 }}>
+            <button 
+              type="button" 
+              onClick={onClose} 
+              style={{ flex: 1 }}
+              disabled={isUploading}
+            >
               Annuler
             </button>
           </div>
