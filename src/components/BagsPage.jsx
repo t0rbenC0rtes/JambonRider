@@ -9,7 +9,7 @@ const BagsPage = () => {
   const [showAddModal, setShowAddModal] = useState(false);
   
   const handleBagClick = (bagId) => {
-    navigate(`/bag/${bagId}`);
+    navigate(`/admin/bag/${bagId}`);
   };
   
   const handleDeleteBag = (e, bagId) => {
