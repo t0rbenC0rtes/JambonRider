@@ -17,7 +17,9 @@ const Navbar = () => {
 	};
 
 	const handleBack = () => {
-		if (location.pathname.startsWith("/admin/bag/")) {
+		if (isAdminHome) {
+			navigate("/");
+		} else if (location.pathname.startsWith("/admin/bag/")) {
 			navigate("/admin/bags");
 		} else {
 			navigate(-1);
@@ -36,11 +38,9 @@ const Navbar = () => {
 				</div>
 
 				<div className="navbar-actions">
-					{!isAdminHome && (
-						<button onClick={handleBack} className="navbar-button">
-							← Retour
-						</button>
-					)}
+					<button onClick={handleBack} className="navbar-button">
+						← {isAdminHome ? "Accueil" : "Retour"}
+					</button>
 					<button
 						onClick={handleLogout}
 						className="navbar-button danger"
