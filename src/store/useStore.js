@@ -24,6 +24,7 @@ const getBagStatus = (bag) => {
 export const useStore = create((set, get) => ({
   // Auth state
   isAuthenticated: false,
+  userRole: null, // 'user' or 'admin'
   
   // Data state
   bags: [],
@@ -33,26 +34,40 @@ export const useStore = create((set, get) => ({
   
   // Auth actions
   login: (password) => {
-    const correctPassword = import.meta.env.VITE_APP_PASSWORD;
-    if (password === correctPassword) {
-      set({ isAuthenticated: true });
+    const userPassword = import.meta.env.VITE_APP_PASSWORD;
+    const adminPassword = import.meta.env.VITE_ADMIN_PASSWORD;
+    
+    if (password === adminPassword) {
+      set({ isAuthenticated: true, userRole: 'admin' });
       localStorage.setItem('jambon_auth', 'true');
+      localStorage.setItem('jambon_role', 'admin');
+      return true;
+    } else if (password === userPassword) {
+      set({ isAuthenticated: true, userRole: 'user' });
+      localStorage.setItem('jambon_auth', 'true');
+      localStorage.setItem('jambon_role', 'user');
       return true;
     }
     return false;
   },
   
   logout: () => {
-    set({ isAuthenticated: false });
+    set({ isAuthenticated: false, userRole: null });
     localStorage.removeItem('jambon_auth');
+    localStorage.removeItem('jambon_role');
     get().unsubscribeFromRealtime();
   },
   
   checkAuth: () => {
     const auth = localStorage.getItem('jambon_auth');
-    if (auth === 'true') {
-      set({ isAuthenticated: true });
+    const role = localStorage.getItem('jambon_role');
+    if (auth === 'true' && role) {
+      set({ isAuthenticated: true, userRole: role });
     }
+  },
+  
+  isAdmin: () => {
+    return get().userRole === 'admin';
   },
   
   // Bag actions
