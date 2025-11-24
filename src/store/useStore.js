@@ -1,4 +1,6 @@
 import { create } from 'zustand';
+import { useSupabase } from '../lib/supabase';
+import * as supabaseHelpers from '../lib/supabaseHelpers';
 
 // Types
 export const BAG_STATUS = {
@@ -25,6 +27,9 @@ export const useStore = create((set, get) => ({
   
   // Data state
   bags: [],
+  isLoading: false,
+  error: null,
+  realtimeChannel: null,
   
   // Auth actions
   login: (password) => {
@@ -40,6 +45,7 @@ export const useStore = create((set, get) => ({
   logout: () => {
     set({ isAuthenticated: false });
     localStorage.removeItem('jambon_auth');
+    get().unsubscribeFromRealtime();
   },
   
   checkAuth: () => {
@@ -50,122 +56,242 @@ export const useStore = create((set, get) => ({
   },
   
   // Bag actions
-  addBag: (bag) => {
-    const newBag = {
-      id: Date.now().toString(),
-      name: bag.name,
-      photo: bag.photo || null,
-      items: [],
-      loaded: false,
-      createdAt: new Date().toISOString()
-    };
-    set((state) => ({
-      bags: [...state.bags, newBag]
-    }));
-    get().saveBags();
-    return newBag;
+  addBag: async (bag) => {
+    set({ isLoading: true, error: null });
+    
+    try {
+      if (useSupabase()) {
+        // Use Supabase
+        const newBag = await supabaseHelpers.createBag(bag);
+        set((state) => ({
+          bags: [...state.bags, newBag],
+          isLoading: false
+        }));
+        return newBag;
+      } else {
+        // Use localStorage
+        const newBag = {
+          id: Date.now().toString(),
+          name: bag.name,
+          photo: bag.photo || null,
+          items: [],
+          loaded: false,
+          createdAt: new Date().toISOString()
+        };
+        set((state) => ({
+          bags: [...state.bags, newBag],
+          isLoading: false
+        }));
+        get().saveBags();
+        return newBag;
+      }
+    } catch (error) {
+      console.error('Error adding bag:', error);
+      set({ error: error.message, isLoading: false });
+      throw error;
+    }
   },
   
-  updateBag: (bagId, updates) => {
-    set((state) => ({
-      bags: state.bags.map(bag => 
-        bag.id === bagId ? { ...bag, ...updates } : bag
-      )
-    }));
-    get().saveBags();
+  updateBag: async (bagId, updates) => {
+    try {
+      if (useSupabase()) {
+        // Update in Supabase
+        await supabaseHelpers.updateBag(bagId, updates);
+        // Local state will update via realtime subscription
+        set((state) => ({
+          bags: state.bags.map(bag => 
+            bag.id === bagId ? { ...bag, ...updates } : bag
+          )
+        }));
+      } else {
+        // Update localStorage
+        set((state) => ({
+          bags: state.bags.map(bag => 
+            bag.id === bagId ? { ...bag, ...updates } : bag
+          )
+        }));
+        get().saveBags();
+      }
+    } catch (error) {
+      console.error('Error updating bag:', error);
+      set({ error: error.message });
+      throw error;
+    }
   },
   
-  deleteBag: (bagId) => {
-    set((state) => ({
-      bags: state.bags.filter(bag => bag.id !== bagId)
-    }));
-    get().saveBags();
+  deleteBag: async (bagId) => {
+    try {
+      if (useSupabase()) {
+        // Delete from Supabase
+        await supabaseHelpers.deleteBag(bagId);
+        // Local state will update via realtime subscription
+        set((state) => ({
+          bags: state.bags.filter(bag => bag.id !== bagId)
+        }));
+      } else {
+        // Delete from localStorage
+        set((state) => ({
+          bags: state.bags.filter(bag => bag.id !== bagId)
+        }));
+        get().saveBags();
+      }
+    } catch (error) {
+      console.error('Error deleting bag:', error);
+      set({ error: error.message });
+      throw error;
+    }
   },
   
-  markBagAsLoaded: (bagId, loaded = true) => {
-    set((state) => ({
-      bags: state.bags.map(bag => 
-        bag.id === bagId ? { ...bag, loaded } : bag
-      )
-    }));
-    get().saveBags();
+  markBagAsLoaded: async (bagId, loaded = true) => {
+    await get().updateBag(bagId, { loaded });
   },
   
   // Item actions
-  addItem: (bagId, item) => {
-    const newItem = {
-      id: Date.now().toString(),
-      name: item.name,
-      photo: item.photo || null,
-      quantity: item.quantity || 1,
-      description: item.description || '',
-      tags: item.tags || [],
-      checked: false,
-      createdAt: new Date().toISOString()
-    };
+  addItem: async (bagId, item) => {
+    set({ isLoading: true, error: null });
     
-    set((state) => ({
-      bags: state.bags.map(bag => {
-        if (bag.id === bagId) {
-          return {
-            ...bag,
-            items: [...bag.items, newItem]
-          };
-        }
-        return bag;
-      })
-    }));
-    get().saveBags();
-    return newItem;
+    try {
+      if (useSupabase()) {
+        // Use Supabase
+        const newItem = await supabaseHelpers.createItem(bagId, item);
+        set((state) => ({
+          bags: state.bags.map(bag => {
+            if (bag.id === bagId) {
+              return {
+                ...bag,
+                items: [...bag.items, newItem]
+              };
+            }
+            return bag;
+          }),
+          isLoading: false
+        }));
+        return newItem;
+      } else {
+        // Use localStorage
+        const newItem = {
+          id: Date.now().toString(),
+          name: item.name,
+          photo: item.photo || null,
+          quantity: item.quantity || 1,
+          description: item.description || '',
+          tags: item.tags || [],
+          checked: false,
+          createdAt: new Date().toISOString()
+        };
+        
+        set((state) => ({
+          bags: state.bags.map(bag => {
+            if (bag.id === bagId) {
+              return {
+                ...bag,
+                items: [...bag.items, newItem]
+              };
+            }
+            return bag;
+          }),
+          isLoading: false
+        }));
+        get().saveBags();
+        return newItem;
+      }
+    } catch (error) {
+      console.error('Error adding item:', error);
+      set({ error: error.message, isLoading: false });
+      throw error;
+    }
   },
   
-  updateItem: (bagId, itemId, updates) => {
-    set((state) => ({
-      bags: state.bags.map(bag => {
-        if (bag.id === bagId) {
-          return {
-            ...bag,
-            items: bag.items.map(item => 
-              item.id === itemId ? { ...item, ...updates } : item
-            )
-          };
-        }
-        return bag;
-      })
-    }));
-    get().saveBags();
+  updateItem: async (bagId, itemId, updates) => {
+    try {
+      if (useSupabase()) {
+        // Update in Supabase
+        await supabaseHelpers.updateItem(itemId, updates);
+        // Local state will update via realtime subscription
+        set((state) => ({
+          bags: state.bags.map(bag => {
+            if (bag.id === bagId) {
+              return {
+                ...bag,
+                items: bag.items.map(item => 
+                  item.id === itemId ? { ...item, ...updates } : item
+                )
+              };
+            }
+            return bag;
+          })
+        }));
+      } else {
+        // Update localStorage
+        set((state) => ({
+          bags: state.bags.map(bag => {
+            if (bag.id === bagId) {
+              return {
+                ...bag,
+                items: bag.items.map(item => 
+                  item.id === itemId ? { ...item, ...updates } : item
+                )
+              };
+            }
+            return bag;
+          })
+        }));
+        get().saveBags();
+      }
+    } catch (error) {
+      console.error('Error updating item:', error);
+      set({ error: error.message });
+      throw error;
+    }
   },
   
-  deleteItem: (bagId, itemId) => {
-    set((state) => ({
-      bags: state.bags.map(bag => {
-        if (bag.id === bagId) {
-          return {
-            ...bag,
-            items: bag.items.filter(item => item.id !== itemId)
-          };
-        }
-        return bag;
-      })
-    }));
-    get().saveBags();
+  deleteItem: async (bagId, itemId) => {
+    try {
+      if (useSupabase()) {
+        // Delete from Supabase
+        await supabaseHelpers.deleteItem(itemId);
+        // Local state will update via realtime subscription
+        set((state) => ({
+          bags: state.bags.map(bag => {
+            if (bag.id === bagId) {
+              return {
+                ...bag,
+                items: bag.items.filter(item => item.id !== itemId)
+              };
+            }
+            return bag;
+          })
+        }));
+      } else {
+        // Delete from localStorage
+        set((state) => ({
+          bags: state.bags.map(bag => {
+            if (bag.id === bagId) {
+              return {
+                ...bag,
+                items: bag.items.filter(item => item.id !== itemId)
+              };
+            }
+            return bag;
+          })
+        }));
+        get().saveBags();
+      }
+    } catch (error) {
+      console.error('Error deleting item:', error);
+      set({ error: error.message });
+      throw error;
+    }
   },
   
-  toggleItemChecked: (bagId, itemId) => {
-    set((state) => ({
-      bags: state.bags.map(bag => {
-        if (bag.id === bagId) {
-          return {
-            ...bag,
-            items: bag.items.map(item => 
-              item.id === itemId ? { ...item, checked: !item.checked } : item
-            )
-          };
-        }
-        return bag;
-      })
-    }));
-    get().saveBags();
+  toggleItemChecked: async (bagId, itemId) => {
+    const bag = get().getBagById(bagId);
+    if (!bag) return;
+    
+    const item = bag.items.find(i => i.id === itemId);
+    if (!item) return;
+    
+    await get().updateItem(bagId, itemId, { checked: !item.checked });
   },
   
   // Utility actions
@@ -180,19 +306,69 @@ export const useStore = create((set, get) => ({
   
   // LocalStorage persistence
   saveBags: () => {
-    const { bags } = get();
-    localStorage.setItem('jambon_bags', JSON.stringify(bags));
+    if (!useSupabase()) {
+      const { bags } = get();
+      localStorage.setItem('jambon_bags', JSON.stringify(bags));
+    }
   },
   
-  loadBags: () => {
-    const saved = localStorage.getItem('jambon_bags');
-    if (saved) {
-      try {
-        const bags = JSON.parse(saved);
-        set({ bags });
-      } catch (e) {
-        console.error('Error loading bags:', e);
+  loadBags: async () => {
+    set({ isLoading: true, error: null });
+    
+    try {
+      if (useSupabase()) {
+        // Load from Supabase
+        const bags = await supabaseHelpers.fetchBags();
+        if (bags) {
+          set({ bags, isLoading: false });
+          // Subscribe to realtime updates
+          get().subscribeToRealtime();
+        }
+      } else {
+        // Load from localStorage
+        const saved = localStorage.getItem('jambon_bags');
+        if (saved) {
+          try {
+            const bags = JSON.parse(saved);
+            set({ bags, isLoading: false });
+          } catch (e) {
+            console.error('Error loading bags:', e);
+            set({ isLoading: false });
+          }
+        } else {
+          set({ isLoading: false });
+        }
       }
+    } catch (error) {
+      console.error('Error loading bags:', error);
+      set({ error: error.message, isLoading: false });
+    }
+  },
+  
+  // Realtime subscription
+  subscribeToRealtime: () => {
+    if (!useSupabase()) return;
+    
+    const channel = supabaseHelpers.subscribeToBags(async () => {
+      // Reload data when changes occur
+      try {
+        const bags = await supabaseHelpers.fetchBags();
+        if (bags) {
+          set({ bags });
+        }
+      } catch (error) {
+        console.error('Error syncing realtime data:', error);
+      }
+    });
+    
+    set({ realtimeChannel: channel });
+  },
+  
+  unsubscribeFromRealtime: () => {
+    const { realtimeChannel } = get();
+    if (realtimeChannel) {
+      supabaseHelpers.unsubscribeFromBags(realtimeChannel);
+      set({ realtimeChannel: null });
     }
   },
   
