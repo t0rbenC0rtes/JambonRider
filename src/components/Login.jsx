@@ -36,7 +36,7 @@ const Login = ({ mode = 'admin' }) => {
       <div className="login-card">
         <div className="login-header">
           <img 
-            src="/img/Jambon.jpg" 
+            src="./img/Jambon.jpg" 
             alt="JambonRider Logo" 
             className="login-logo"
           />
