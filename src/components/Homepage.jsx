@@ -8,13 +8,13 @@ const Homepage = () => {
     <div className="homepage">
       <div className="homepage-content">
         <img 
-          src="/img/jambon.jpg" 
+          src="./img/jambon.jpg" 
           alt="JambonRider Logo" 
           className="homepage-logo"
         />
         <h1 className="homepage-title">JambonRider</h1>
         <p className="homepage-subtitle">
-          Gestion de matériel vidéo
+          Merci pour ton aide fieu
         </p>
         
         <div className="homepage-buttons">
