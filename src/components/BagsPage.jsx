@@ -142,13 +142,47 @@ const BagsPage = () => {
 // Simple Add Bag Modal (will enhance with image upload later)
 const AddBagModal = ({ onClose }) => {
   const [name, setName] = useState('');
+  const [photoFile, setPhotoFile] = useState(null);
+  const [photoPreview, setPhotoPreview] = useState(null);
+  const [isUploading, setIsUploading] = useState(false);
   const { addBag } = useStore();
   
-  const handleSubmit = (e) => {
+  const handlePhotoChange = (e) => {
+    const file = e.target.files[0];
+    if (file && file.type.startsWith('image/')) {
+      setPhotoFile(file);
+      
+      // Create preview
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setPhotoPreview(reader.result);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+  
+  const handleRemovePhoto = () => {
+    setPhotoFile(null);
+    setPhotoPreview(null);
+  };
+  
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (name.trim()) {
-      addBag({ name: name.trim() });
-      onClose();
+      setIsUploading(true);
+      
+      try {
+        await addBag({ 
+          name: name.trim(),
+          photoFile 
+        });
+        onClose();
+      } catch (error) {
+        console.error('Error adding bag:', error);
+        alert('Erreur lors de l\'ajout du sac');
+      } finally {
+        setIsUploading(false);
+      }
     }
   };
   
@@ -169,11 +203,52 @@ const AddBagModal = ({ onClose }) => {
               required
             />
           </div>
+          
+          <div className="form-group">
+            <label className="form-label">Photo</label>
+            {photoPreview ? (
+              <div className="photo-preview-container">
+                <img src={photoPreview} alt="Preview" className="photo-preview" />
+                <button 
+                  type="button" 
+                  onClick={handleRemovePhoto}
+                  className="photo-remove-btn"
+                >
+                  ✕
+                </button>
+              </div>
+            ) : (
+              <div className="photo-upload-container">
+                <label htmlFor="bag-photo-upload" className="photo-upload-label">
+                  📷 Choisir une photo
+                </label>
+                <input
+                  id="bag-photo-upload"
+                  type="file"
+                  accept="image/*"
+                  capture="environment"
+                  onChange={handlePhotoChange}
+                  className="photo-upload-input"
+                />
+              </div>
+            )}
+          </div>
+          
           <div style={{ display: 'flex', gap: 'var(--spacing-md)', marginTop: 'var(--spacing-lg)' }}>
-            <button type="submit" className="primary" style={{ flex: 1 }}>
-              Créer
+            <button 
+              type="submit" 
+              className="primary" 
+              style={{ flex: 1 }}
+              disabled={isUploading}
+            >
+              {isUploading ? 'Upload...' : 'Créer'}
             </button>
-            <button type="button" onClick={onClose} style={{ flex: 1 }}>
+            <button 
+              type="button" 
+              onClick={onClose} 
+              style={{ flex: 1 }}
+              disabled={isUploading}
+            >
               Annuler
             </button>
           </div>

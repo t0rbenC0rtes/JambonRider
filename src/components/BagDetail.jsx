@@ -15,6 +15,7 @@ const BagDetail = () => {
   } = useStore();
   
   const [showAddItemModal, setShowAddItemModal] = useState(false);
+  const [editingItem, setEditingItem] = useState(null);
   
   const bag = getBagById(bagId);
   const status = getBagStatus(bagId);
@@ -172,6 +173,13 @@ const BagDetail = () => {
                     <h3 className="item-name">{item.name}</h3>
                     <div className="item-actions">
                       <button
+                        className="icon-button"
+                        onClick={() => setEditingItem(item)}
+                        title="Modifier"
+                      >
+                        ✏️
+                      </button>
+                      <button
                         className="icon-button danger"
                         onClick={() => handleDeleteItem(item.id)}
                         title="Supprimer"
@@ -208,6 +216,14 @@ const BagDetail = () => {
         <AddItemModal 
           bagId={bagId} 
           onClose={() => setShowAddItemModal(false)} 
+        />
+      )}
+      
+      {editingItem && (
+        <EditItemModal 
+          bagId={bagId}
+          item={editingItem}
+          onClose={() => setEditingItem(null)} 
         />
       )}
     </div>
@@ -362,6 +378,177 @@ const AddItemModal = ({ bagId, onClose }) => {
               disabled={isUploading}
             >
               {isUploading ? 'Upload...' : 'Créer'}
+            </button>
+            <button 
+              type="button" 
+              onClick={onClose} 
+              style={{ flex: 1 }}
+              disabled={isUploading}
+            >
+              Annuler
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+};
+
+const EditItemModal = ({ bagId, item, onClose }) => {
+  const [name, setName] = useState(item.name);
+  const [quantity, setQuantity] = useState(item.quantity || 1);
+  const [description, setDescription] = useState(item.description || '');
+  const [tagsInput, setTagsInput] = useState(item.tags?.join(', ') || '');
+  const [photoFile, setPhotoFile] = useState(null);
+  const [photoPreview, setPhotoPreview] = useState(item.photo || null);
+  const [isUploading, setIsUploading] = useState(false);
+  const { updateItem } = useStore();
+  
+  const handlePhotoChange = (e) => {
+    const file = e.target.files[0];
+    if (file && file.type.startsWith('image/')) {
+      setPhotoFile(file);
+      
+      // Create preview
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setPhotoPreview(reader.result);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+  
+  const handleRemovePhoto = () => {
+    setPhotoFile(null);
+    setPhotoPreview(null);
+  };
+  
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (name.trim()) {
+      setIsUploading(true);
+      
+      try {
+        const tags = tagsInput
+          .split(',')
+          .map(tag => tag.trim())
+          .filter(tag => tag.length > 0);
+        
+        const updates = {
+          name: name.trim(),
+          quantity: parseInt(quantity) || 1,
+          description: description.trim(),
+          tags
+        };
+        
+        // Add photo update
+        if (photoFile) {
+          updates.photoFile = photoFile;
+        } else if (photoPreview === null && item.photo) {
+          // Photo was removed
+          updates.photo = null;
+        }
+        
+        await updateItem(bagId, item.id, updates);
+        onClose();
+      } catch (error) {
+        console.error('Error updating item:', error);
+        alert('Erreur lors de la modification de l\'objet');
+      } finally {
+        setIsUploading(false);
+      }
+    }
+  };
+  
+  return (
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+        <h2>Modifier l'Objet</h2>
+        <form onSubmit={handleSubmit}>
+          <div className="form-group">
+            <label className="form-label">Nom *</label>
+            <input
+              type="text"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="Ex: Caméra Sony A7III"
+              className="form-input"
+              autoFocus
+              required
+            />
+          </div>
+          
+          <div className="form-group">
+            <label className="form-label">Photo</label>
+            {photoPreview ? (
+              <div className="photo-preview-container">
+                <img src={photoPreview} alt="Preview" className="photo-preview" />
+                <button 
+                  type="button" 
+                  onClick={handleRemovePhoto}
+                  className="photo-remove-btn"
+                >
+                  ✕
+                </button>
+              </div>
+            ) : (
+              <div className="photo-upload-container">
+                <label htmlFor="edit-photo-upload" className="photo-upload-label">
+                  📷 Choisir une photo
+                </label>
+                <input
+                  id="edit-photo-upload"
+                  type="file"
+                  accept="image/*"
+                  capture="environment"
+                  onChange={handlePhotoChange}
+                  className="photo-upload-input"
+                />
+              </div>
+            )}
+          </div>
+          
+          <div className="form-group">
+            <label className="form-label">Quantité</label>
+            <input
+              type="number"
+              value={quantity}
+              onChange={(e) => setQuantity(e.target.value)}
+              min="1"
+              className="form-input"
+            />
+          </div>
+          
+          <div className="form-group">
+            <label className="form-label">Description</label>
+            <textarea
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              placeholder="Détails supplémentaires..."
+              className="form-input"
+              rows="3"
+            />
+          </div>
+          
+          <div className="form-group">
+            <label className="form-label">Tags (séparés par virgule)</label>
+            <input
+              type="text"
+              value={tagsInput}
+              onChange={(e) => setTagsInput(e.target.value)}
+              placeholder="Ex: caméra, prioritaire, fragile"
+              className="form-input"
+            />
+          </div>
+          
+          <div style={{ display: 'flex', gap: 'var(--spacing-md)', marginTop: 'var(--spacing-lg)' }}>
+            <button 
+              type="submit" 
+              className="primary" 
+              style={{ flex: 1 }}
+              disabled={isUploading}
+            >
+              {isUploading ? 'Upload...' : 'Modifier'}
             </button>
             <button 
               type="button" 

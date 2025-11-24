@@ -75,9 +75,20 @@ export const useStore = create((set, get) => ({
     set({ isLoading: true, error: null });
     
     try {
+      let photoUrl = null;
+      
+      // Upload photo if provided
+      if (bag.photoFile && useSupabase()) {
+        photoUrl = await supabaseHelpers.uploadItemPhoto(bag.photoFile);
+      }
+      
       if (useSupabase()) {
         // Use Supabase
-        const newBag = await supabaseHelpers.createBag(bag);
+        const bagData = {
+          name: bag.name,
+          photo: photoUrl
+        };
+        const newBag = await supabaseHelpers.createBag(bagData);
         set((state) => ({
           bags: [...state.bags, newBag],
           isLoading: false
@@ -109,20 +120,40 @@ export const useStore = create((set, get) => ({
   
   updateBag: async (bagId, updates) => {
     try {
+      let photoUrl = updates.photo;
+      
+      // Upload new photo if provided
+      if (updates.photoFile && useSupabase()) {
+        // Delete old photo if exists
+        const existingBag = get().getBagById(bagId);
+        if (existingBag?.photo) {
+          await supabaseHelpers.deleteItemPhoto(existingBag.photo);
+        }
+        
+        // Upload new photo
+        photoUrl = await supabaseHelpers.uploadItemPhoto(updates.photoFile);
+      }
+      
+      // Remove photoFile from updates and add photoUrl
+      const { photoFile, ...finalUpdates } = updates;
+      if (photoUrl !== undefined) {
+        finalUpdates.photo = photoUrl;
+      }
+      
       if (useSupabase()) {
         // Update in Supabase
-        await supabaseHelpers.updateBag(bagId, updates);
+        await supabaseHelpers.updateBag(bagId, finalUpdates);
         // Local state will update via realtime subscription
         set((state) => ({
           bags: state.bags.map(bag => 
-            bag.id === bagId ? { ...bag, ...updates } : bag
+            bag.id === bagId ? { ...bag, ...finalUpdates } : bag
           )
         }));
       } else {
         // Update localStorage
         set((state) => ({
           bags: state.bags.map(bag => 
-            bag.id === bagId ? { ...bag, ...updates } : bag
+            bag.id === bagId ? { ...bag, ...finalUpdates } : bag
           )
         }));
         get().saveBags();
