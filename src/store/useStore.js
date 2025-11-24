@@ -158,7 +158,21 @@ export const useStore = create((set, get) => ({
   },
   
   markBagAsLoaded: async (bagId, loaded = true) => {
+    // Update bag loaded status
     await get().updateBag(bagId, { loaded });
+    
+    // If unloading (loaded = false), uncheck all items in the bag
+    if (!loaded) {
+      const bag = get().getBagById(bagId);
+      if (bag && bag.items) {
+        // Uncheck all items that are currently checked
+        for (const item of bag.items) {
+          if (item.checked) {
+            await get().updateItem(bagId, item.id, { checked: false });
+          }
+        }
+      }
+    }
   },
   
   // Item actions
