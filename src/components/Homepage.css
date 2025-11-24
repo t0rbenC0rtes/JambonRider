@@ -1,125 +1,125 @@
 .homepage {
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: var(--spacing-xl);
-  background: linear-gradient(135deg, var(--color-bg-primary) 0%, var(--color-bg-secondary) 100%);
+	min-height: 100vh;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	padding: var(--spacing-xl);
+	background: linear-gradient(
+		135deg,
+		var(--color-bg-primary) 0%,
+		var(--color-bg-secondary) 100%
+	);
 }
 
 .homepage-content {
-  width: 100%;
-  max-width: 500px;
-  text-align: center;
-}
-
-.homepage-logo {
-  width: 150px;
-  height: 150px;
-  margin: 0 auto var(--spacing-xl);
-  object-fit: contain;
-  border-radius: var(--radius-lg);
-  border: 3px solid var(--color-accent-green);
-  padding: var(--spacing-lg);
-  background-color: var(--color-bg-secondary);
-  box-shadow: var(--shadow-lg);
+	width: 100%;
+	max-width: 500px;
+	text-align: center;
 }
 
 .homepage-title {
-  font-size: 2.5rem;
-  color: var(--color-accent-cream);
-  margin-bottom: var(--spacing-sm);
-  letter-spacing: 2px;
+	font-size: 2.5rem;
+	color: var(--color-accent-cream);
+	margin-bottom: var(--spacing-sm);
+	letter-spacing: 2px;
 }
 
 .homepage-subtitle {
-  color: var(--color-text-secondary);
-  font-size: 1.1rem;
-  margin-bottom: var(--spacing-xl);
+	color: var(--color-text-secondary);
+	font-size: 1.1rem;
+	margin-bottom: var(--spacing-xl);
 }
 
 .homepage-buttons {
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-lg);
-  margin-top: var(--spacing-xl);
+	display: flex;
+	flex-direction: column;
+	gap: var(--spacing-lg);
+	margin-top: var(--spacing-xl);
 }
 
 .homepage-button {
-  padding: var(--spacing-lg) var(--spacing-xl);
-  font-size: 1.2rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-  border-radius: var(--radius-md);
-  transition: all var(--transition-normal);
-  cursor: pointer;
-  position: relative;
-  overflow: hidden;
+	padding: var(--spacing-lg) var(--spacing-xl);
+	font-size: 1.2rem;
+	font-weight: 700;
+	text-transform: uppercase;
+	letter-spacing: 1px;
+	border-radius: var(--radius-md);
+	transition: all var(--transition-normal);
+	cursor: pointer;
+	position: relative;
+	overflow: hidden;
 }
 
 .homepage-button::before {
-  content: '';
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 0;
-  height: 0;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.1);
-  transform: translate(-50%, -50%);
-  transition: width 0.6s, height 0.6s;
+	content: "";
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	width: 0;
+	height: 0;
+	border-radius: 50%;
+	background: rgba(255, 255, 255, 0.1);
+	transform: translate(-50%, -50%);
+	transition: width 0.6s, height 0.6s;
 }
 
 .homepage-button:hover::before {
-  width: 300px;
-  height: 300px;
+	width: 300px;
+	height: 300px;
 }
 
 .homepage-button.load {
-  background: linear-gradient(135deg, var(--color-accent-green) 0%, var(--color-accent-green-hover) 100%);
-  border-color: var(--color-accent-green-hover);
+	background: linear-gradient(
+		135deg,
+		var(--color-accent-green) 0%,
+		var(--color-accent-green-hover) 100%
+	);
+	border-color: var(--color-accent-green-hover);
 }
 
 .homepage-button.admin {
-  background: linear-gradient(135deg, var(--color-accent-brown) 0%, #6d5a4a 100%);
-  border-color: #6d5a4a;
+	background: linear-gradient(
+		135deg,
+		var(--color-accent-brown) 0%,
+		#6d5a4a 100%
+	);
+	border-color: #6d5a4a;
 }
 
 .homepage-button-icon {
-  font-size: 1.5rem;
-  margin-right: var(--spacing-sm);
+	font-size: 1.5rem;
+	margin-right: var(--spacing-sm);
 }
 
 .homepage-button-text {
-  position: relative;
-  z-index: 1;
+	position: relative;
+	z-index: 1;
 }
 
 .homepage-footer {
-  margin-top: var(--spacing-xl);
-  color: var(--color-text-muted);
-  font-size: 0.9rem;
+	margin-top: var(--spacing-xl);
+	color: var(--color-text-muted);
+	font-size: 0.9rem;
 }
 
 /* Mobile Responsive */
 @media (max-width: 768px) {
-  .homepage-logo {
-    width: 120px;
-    height: 120px;
-  }
-  
-  .homepage-title {
-    font-size: 2rem;
-  }
-  
-  .homepage-subtitle {
-    font-size: 1rem;
-  }
-  
-  .homepage-button {
-    padding: var(--spacing-md) var(--spacing-lg);
-    font-size: 1rem;
-  }
+	.homepage-logo {
+		width: 120px;
+		height: 120px;
+	}
+
+	.homepage-title {
+		font-size: 2rem;
+	}
+
+	.homepage-subtitle {
+		font-size: 1rem;
+	}
+
+	.homepage-button {
+		padding: var(--spacing-md) var(--spacing-lg);
+		font-size: 1rem;
+	}
 }

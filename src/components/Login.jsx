@@ -35,11 +35,7 @@ const Login = ({ mode = 'admin' }) => {
     <div className="login-container">
       <div className="login-card">
         <div className="login-header">
-          <img 
-            src="/img/Jambon.jpg" 
-            alt="JambonRider Logo" 
-            className="login-logo"
-          />
+          
           <h1 className="login-title">JambonRider</h1>
           <p className="login-subtitle">
             Mode Administrateur
