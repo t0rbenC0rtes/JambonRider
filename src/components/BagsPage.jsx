@@ -7,6 +7,7 @@ const BagsPage = () => {
   const navigate = useNavigate();
   const { bags, deleteBag, getBagStatus } = useStore();
   const [showAddModal, setShowAddModal] = useState(false);
+  const [editingBag, setEditingBag] = useState(null);
   
   const handleBagClick = (bagId) => {
     navigate(`/admin/bag/${bagId}`);
@@ -99,6 +100,16 @@ const BagsPage = () => {
                     <h3 className="bag-card-name">{bag.name}</h3>
                     <div className="bag-card-actions">
                       <button
+                        className="icon-button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setEditingBag(bag);
+                        }}
+                        title="Modifier"
+                      >
+                        ✏️
+                      </button>
+                      <button
                         className="icon-button danger"
                         onClick={(e) => handleDeleteBag(e, bag.id)}
                         title="Supprimer"
@@ -134,6 +145,13 @@ const BagsPage = () => {
       
       {showAddModal && (
         <AddBagModal onClose={() => setShowAddModal(false)} />
+      )}
+      
+      {editingBag && (
+        <EditBagModal 
+          bag={editingBag}
+          onClose={() => setEditingBag(null)} 
+        />
       )}
     </div>
   );
@@ -242,6 +260,133 @@ const AddBagModal = ({ onClose }) => {
               disabled={isUploading}
             >
               {isUploading ? 'Upload...' : 'Créer'}
+            </button>
+            <button 
+              type="button" 
+              onClick={onClose} 
+              style={{ flex: 1 }}
+              disabled={isUploading}
+            >
+              Annuler
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+};
+
+const EditBagModal = ({ bag, onClose }) => {
+  const [name, setName] = useState(bag.name);
+  const [photoFile, setPhotoFile] = useState(null);
+  const [photoPreview, setPhotoPreview] = useState(bag.photo || null);
+  const [isUploading, setIsUploading] = useState(false);
+  const { updateBag } = useStore();
+  
+  const handlePhotoChange = (e) => {
+    const file = e.target.files[0];
+    if (file && file.type.startsWith('image/')) {
+      setPhotoFile(file);
+      
+      // Create preview
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setPhotoPreview(reader.result);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+  
+  const handleRemovePhoto = () => {
+    setPhotoFile(null);
+    setPhotoPreview(null);
+  };
+  
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (name.trim()) {
+      setIsUploading(true);
+      
+      try {
+        const updates = { 
+          name: name.trim()
+        };
+        
+        // Add photo update
+        if (photoFile) {
+          updates.photoFile = photoFile;
+        } else if (photoPreview === null && bag.photo) {
+          // Photo was removed
+          updates.photo = null;
+        }
+        
+        await updateBag(bag.id, updates);
+        onClose();
+      } catch (error) {
+        console.error('Error updating bag:', error);
+        alert('Erreur lors de la modification du sac');
+      } finally {
+        setIsUploading(false);
+      }
+    }
+  };
+  
+  return (
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+        <h2>Modifier le Sac</h2>
+        <form onSubmit={handleSubmit}>
+          <div className="form-group">
+            <label className="form-label">Nom du sac</label>
+            <input
+              type="text"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="Ex: Sac Caméras"
+              className="form-input"
+              autoFocus
+              required
+            />
+          </div>
+          
+          <div className="form-group">
+            <label className="form-label">Photo</label>
+            {photoPreview ? (
+              <div className="photo-preview-container">
+                <img src={photoPreview} alt="Preview" className="photo-preview" />
+                <button 
+                  type="button" 
+                  onClick={handleRemovePhoto}
+                  className="photo-remove-btn"
+                >
+                  ✕
+                </button>
+              </div>
+            ) : (
+              <div className="photo-upload-container">
+                <label htmlFor="edit-bag-photo-upload" className="photo-upload-label">
+                  📷 Choisir une photo
+                </label>
+                <input
+                  id="edit-bag-photo-upload"
+                  type="file"
+                  accept="image/*"
+                  capture="environment"
+                  onChange={handlePhotoChange}
+                  className="photo-upload-input"
+                />
+              </div>
+            )}
+          </div>
+          
+          <div style={{ display: 'flex', gap: 'var(--spacing-md)', marginTop: 'var(--spacing-lg)' }}>
+            <button 
+              type="submit" 
+              className="primary" 
+              style={{ flex: 1 }}
+              disabled={isUploading}
+            >
+              {isUploading ? 'Upload...' : 'Modifier'}
             </button>
             <button 
               type="button" 
