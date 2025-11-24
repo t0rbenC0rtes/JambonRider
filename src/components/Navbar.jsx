@@ -7,25 +7,29 @@ const Navbar = () => {
   const location = useLocation();
   const { logout } = useStore();
   
-  const isHomePage = location.pathname === '/';
+  const isAdminHome = location.pathname === '/admin/bags';
   
   const handleLogout = () => {
     if (confirm('Êtes-vous sûr de vouloir vous déconnecter ?')) {
       logout();
-      navigate('/login');
+      navigate('/');
     }
   };
   
   const handleBack = () => {
-    navigate(-1);
+    if (location.pathname.startsWith('/admin/bag/')) {
+      navigate('/admin/bags');
+    } else {
+      navigate(-1);
+    }
   };
   
   return (
     <nav className="navbar">
       <div className="navbar-content">
-        <div className="navbar-brand" onClick={() => navigate('/')} style={{ cursor: 'pointer' }}>
+        <div className="navbar-brand" onClick={() => navigate('/admin/bags')} style={{ cursor: 'pointer' }}>
           <img 
-            src="./img/jambon.jpg" 
+            src="./img/Jambon.jpg" 
             alt="JambonRider" 
             className="navbar-logo"
           />
@@ -33,7 +37,7 @@ const Navbar = () => {
         </div>
         
         <div className="navbar-actions">
-          {!isHomePage && (
+          {!isAdminHome && (
             <button onClick={handleBack} className="navbar-button">
               ← Retour
             </button>
