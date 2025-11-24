@@ -25,7 +25,7 @@ const Navbar = () => {
       <div className="navbar-content">
         <div className="navbar-brand" onClick={() => navigate('/')} style={{ cursor: 'pointer' }}>
           <img 
-            src="/img/Jambon.jpg" 
+            src="./img/jambon.jpg" 
             alt="JambonRider" 
             className="navbar-logo"
           />
