@@ -8,7 +8,7 @@ import { generateQRData } from '../lib/qrHelpers';
 export default function QRCodeDisplay({ bag }) {
   if (!bag) return null;
 
-  const qrData = generateQRData(bag.id);
+  const qrData = JSON.stringify(generateQRData(bag.id));
 
   const handleDownload = () => {
     // Get the SVG element

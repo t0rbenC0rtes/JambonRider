@@ -27,7 +27,7 @@ export default function QRPrintSheet() {
       {/* Grid Layout - Multiple labels per page */}
       <div className="qr-label-grid">
         {bags.map((bag) => {
-          const qrData = generateQRData(bag.id);
+          const qrData = JSON.stringify(generateQRData(bag.id));
           return (
             <div key={bag.id} className="qr-label">
               <QRCodeSVG
@@ -48,7 +48,7 @@ export default function QRPrintSheet() {
       {/* Individual Cards - One per page */}
       <div className="qr-cards">
         {bags.map((bag) => {
-          const qrData = generateQRData(bag.id);
+          const qrData = JSON.stringify(generateQRData(bag.id));
           return (
             <div key={`card-${bag.id}`} className="qr-card">
               <div className="qr-card-content">
