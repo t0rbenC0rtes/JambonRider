@@ -1,4 +1,5 @@
 import { useNavigate } from 'react-router-dom';
+import { useState, useRef } from 'react';
 import QRScanner from './QRScanner';
 import { parseQRData } from '../lib/qrHelpers';
 import '../styles/QRScannerPage.css';
@@ -9,21 +10,33 @@ import '../styles/QRScannerPage.css';
  */
 export default function QRScannerPage() {
   const navigate = useNavigate();
+  const [isProcessing, setIsProcessing] = useState(false);
+  const hasNavigatedRef = useRef(false);
 
   const handleScanSuccess = (decodedText) => {
+    // Prevent multiple scans
+    if (isProcessing || hasNavigatedRef.current) return;
+    
+    setIsProcessing(true);
+    hasNavigatedRef.current = true;
+    
     try {
       // Parse and validate QR code
       const qrData = parseQRData(decodedText);
       
       if (qrData && qrData.bagId) {
-        // Navigate to bag detail page
-        navigate(`/load/bag/${qrData.bagId}`);
+        // Navigate to bag detail page with replace to avoid back button issues
+        navigate(`/load/bag/${qrData.bagId}`, { replace: true });
       } else {
         alert('Invalid QR code. Please scan a JambonRider bag QR code.');
+        setIsProcessing(false);
+        hasNavigatedRef.current = false;
       }
     } catch (error) {
       console.error('Error processing QR code:', error);
       alert('Failed to read QR code. Please try again.');
+      setIsProcessing(false);
+      hasNavigatedRef.current = false;
     }
   };
 
