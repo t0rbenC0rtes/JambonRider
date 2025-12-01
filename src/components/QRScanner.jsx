@@ -111,9 +111,11 @@ export default function QRScanner({ onScanSuccess, onScanError }) {
 
     // Cleanup
     return () => {
-      if (html5QrCodeRef.current && isScanning) {
+      if (html5QrCodeRef.current) {
         html5QrCodeRef.current.stop().catch(err => {
           console.error('Error stopping scanner:', err);
+        }).finally(() => {
+          html5QrCodeRef.current = null;
         });
       }
     };
