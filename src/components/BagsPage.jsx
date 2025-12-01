@@ -56,6 +56,12 @@ const BagsPage = () => {
             📋 Gérer les layouts
           </button>
           <button 
+            className="secondary"
+            onClick={() => navigate('/admin/qr-print')}
+          >
+            📄 Imprimer QR codes
+          </button>
+          <button 
             className="primary"
             onClick={() => setShowAddModal(true)}
           >

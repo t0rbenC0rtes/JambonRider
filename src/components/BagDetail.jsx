@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useStore, BAG_STATUS } from '../store/useStore';
+import QRCodeDisplay from './QRCodeDisplay';
 import './BagDetail.css';
 
 const BagDetail = () => {
@@ -116,6 +117,18 @@ const BagDetail = () => {
             </div>
           </div>
         )}
+      </div>
+      
+      {/* QR Code Section */}
+      <div className="qr-section" style={{
+        maxWidth: '800px',
+        margin: '2rem auto',
+        padding: '1.5rem',
+        backgroundColor: 'var(--bg-secondary)',
+        borderRadius: '8px',
+        border: '1px solid var(--border-color)'
+      }}>
+        <QRCodeDisplay bag={bag} />
       </div>
       
       <div className="items-section">

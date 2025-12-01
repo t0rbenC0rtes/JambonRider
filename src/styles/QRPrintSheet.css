@@ -1,0 +1,191 @@
+/* QR Print Sheet Styles */
+
+.qr-print-container {
+  padding: 2rem;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.qr-print-header {
+  margin-bottom: 2rem;
+  text-align: center;
+}
+
+.qr-print-header h1 {
+  color: var(--text-primary);
+  margin-bottom: 0.5rem;
+}
+
+.qr-print-header p {
+  color: var(--text-secondary);
+  margin-bottom: 1rem;
+}
+
+.print-button {
+  padding: 0.75rem 2rem;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 1rem;
+  transition: background-color 0.2s;
+}
+
+.print-button:hover {
+  background-color: #0056b3;
+}
+
+/* Label Grid Layout */
+.qr-label-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, 3cm);
+  gap: 0.5cm;
+  justify-content: center;
+  margin-bottom: 2rem;
+}
+
+.qr-label {
+  width: 3cm;
+  height: 3cm;
+  border: 1px dashed #ccc;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 0.2cm;
+  box-sizing: border-box;
+  page-break-inside: avoid;
+}
+
+.qr-label svg {
+  width: 2.4cm;
+  height: 2.4cm;
+}
+
+.qr-label-name {
+  font-size: 0.5rem;
+  text-align: center;
+  margin-top: 0.1cm;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  width: 100%;
+  color: var(--text-primary);
+}
+
+/* Individual Card Layout */
+.qr-cards {
+  margin-top: 2rem;
+}
+
+.qr-card {
+  page-break-after: always;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.qr-card:last-child {
+  page-break-after: auto;
+}
+
+.qr-card-content {
+  text-align: center;
+  padding: 2rem;
+  border: 2px solid #333;
+  border-radius: 8px;
+  max-width: 400px;
+}
+
+.qr-card-content h2 {
+  font-size: 2rem;
+  margin-bottom: 1.5rem;
+  color: var(--text-primary);
+}
+
+.qr-card-code {
+  margin: 2rem 0;
+  display: flex;
+  justify-content: center;
+}
+
+.qr-card-code svg {
+  width: 256px;
+  height: 256px;
+}
+
+.qr-card-instructions {
+  margin-top: 1.5rem;
+}
+
+.qr-card-instructions p {
+  margin: 0.5rem 0;
+  color: var(--text-secondary);
+}
+
+.qr-card-id {
+  font-family: monospace;
+  font-size: 0.875rem;
+  color: #666;
+}
+
+.qr-print-footer {
+  margin-top: 2rem;
+  padding: 1rem;
+  background-color: var(--bg-secondary);
+  border-radius: 4px;
+  text-align: center;
+  color: var(--text-secondary);
+}
+
+/* Print Styles */
+@media print {
+  .no-print {
+    display: none !important;
+  }
+
+  .qr-print-container {
+    padding: 0;
+  }
+
+  .qr-label-grid {
+    gap: 0;
+  }
+
+  .qr-label {
+    border: 1px solid #000;
+    background: white;
+  }
+
+  .qr-card {
+    margin: 0;
+    padding: 0;
+  }
+
+  .qr-card-content {
+    border-color: #000;
+  }
+
+  .page-break {
+    page-break-after: always;
+  }
+
+  /* Ensure QR codes print in high quality */
+  svg {
+    shape-rendering: crispEdges;
+  }
+}
+
+/* Page break utility */
+.page-break {
+  display: none;
+}
+
+@media print {
+  .page-break {
+    display: block;
+    page-break-after: always;
+  }
+}

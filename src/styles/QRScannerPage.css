@@ -1,0 +1,97 @@
+/* QR Scanner Page Styles */
+
+.qr-scanner-page {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background-color: var(--bg-primary);
+}
+
+.qr-scanner-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem;
+  background-color: var(--bg-secondary);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.qr-scanner-header h1 {
+  font-size: 1.25rem;
+  margin: 0;
+  color: var(--text-primary);
+}
+
+.cancel-button {
+  padding: 0.5rem 1rem;
+  background-color: #666;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.875rem;
+  transition: background-color 0.2s;
+}
+
+.cancel-button:hover {
+  background-color: #555;
+}
+
+.qr-scanner-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  max-width: 600px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.qr-scanner-footer {
+  padding: 1rem;
+  text-align: center;
+  background-color: var(--bg-secondary);
+  border-top: 1px solid var(--border-color);
+  color: var(--text-secondary);
+}
+
+.qr-scanner-footer p {
+  margin: 0;
+  font-size: 0.875rem;
+}
+
+/* QR Scanner Component Styles */
+.qr-scanner-container {
+  width: 100%;
+  max-width: 500px;
+}
+
+.qr-scanner-error {
+  margin-bottom: 1rem;
+  padding: 1rem;
+  background-color: #fee;
+  border: 1px solid #fcc;
+  border-radius: 4px;
+}
+
+.qr-scanner-instructions {
+  margin-top: 1rem;
+  padding: 1rem;
+  background-color: var(--bg-secondary);
+  border-radius: 4px;
+}
+
+/* Override html5-qrcode styles */
+#qr-reader {
+  border: 2px solid var(--border-color);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+#qr-reader video {
+  width: 100%;
+  height: auto;
+  display: block;
+}

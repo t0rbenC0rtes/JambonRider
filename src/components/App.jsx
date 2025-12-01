@@ -10,6 +10,8 @@ import BagDetail from './BagDetail';
 import LayoutsPage from './LayoutsPage';
 import LoadMode from './LoadMode';
 import LoadBagDetail from './LoadBagDetail';
+import QRScannerPage from './QRScannerPage';
+import QRPrintSheet from './QRPrintSheet';
 import '../styles/App.css';
 
 // Protected Route for Admin
@@ -78,6 +80,15 @@ function App() {
           </AdminRoute>
         } />
         
+        <Route path="/admin/qr-print" element={
+          <AdminRoute>
+            <>
+              <Navbar />
+              <QRPrintSheet />
+            </>
+          </AdminRoute>
+        } />
+        
         {/* Load Mode Routes - Public */}
         <Route path="/load" element={
           <>
@@ -90,6 +101,13 @@ function App() {
           <>
             <LoadNavbar />
             <LoadBagDetail />
+          </>
+        } />
+        
+        <Route path="/load/scan" element={
+          <>
+            <LoadNavbar />
+            <QRScannerPage />
           </>
         } />
         

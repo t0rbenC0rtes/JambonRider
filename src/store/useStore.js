@@ -86,12 +86,24 @@ export const useStore = create((set, get) => ({
       }
       
       if (useSupabase()) {
-        // Use Supabase
+        // Create bag first to get ID
         const bagData = {
           name: bag.name,
           photo: photoUrl
         };
         const newBag = await supabaseHelpers.createBag(bagData);
+        
+        // Generate and upload QR code
+        try {
+          const qrCodeUrl = await supabaseHelpers.generateAndUploadQR(newBag.id);
+          // Update bag with QR code URL
+          await supabaseHelpers.updateBag(newBag.id, { qrCode: qrCodeUrl });
+          newBag.qrCode = qrCodeUrl;
+        } catch (qrError) {
+          console.error('Failed to generate QR code:', qrError);
+          // Continue even if QR generation fails
+        }
+        
         set((state) => ({
           bags: [...state.bags, newBag],
           isLoading: false
@@ -103,6 +115,7 @@ export const useStore = create((set, get) => ({
           id: Date.now().toString(),
           name: bag.name,
           photo: bag.photo || null,
+          qrCode: null,
           items: [],
           loaded: false,
           createdAt: new Date().toISOString()
@@ -171,6 +184,19 @@ export const useStore = create((set, get) => ({
   deleteBag: async (bagId) => {
     try {
       if (useSupabase()) {
+        // Get bag to check for QR code
+        const bag = get().bags.find(b => b.id === bagId);
+        
+        // Delete QR code if exists
+        if (bag?.qrCode) {
+          try {
+            await supabaseHelpers.deleteQRCode(bagId);
+          } catch (qrError) {
+            console.error('Failed to delete QR code:', qrError);
+            // Continue with bag deletion even if QR cleanup fails
+          }
+        }
+        
         // Delete from Supabase
         await supabaseHelpers.deleteBag(bagId);
         // Local state will update via realtime subscription

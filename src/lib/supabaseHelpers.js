@@ -1,5 +1,6 @@
 import { supabase, useSupabase } from './supabase';
 import { compressImage, generateUniqueFilename } from './imageCompression';
+import { generateQRCodeBlob } from './qrHelpers';
 
 // ============= STORAGE =============
 
@@ -67,6 +68,68 @@ export const deleteItemPhoto = async (photoUrl) => {
   }
 };
 
+/**
+ * Generate and upload QR code for a bag
+ * @param {string} bagId - The bag ID
+ * @returns {Promise<string>} - Public URL of uploaded QR code
+ */
+export const generateAndUploadQR = async (bagId) => {
+  if (!useSupabase()) return null;
+  
+  try {
+    // Generate QR code blob
+    const qrBlob = await generateQRCodeBlob(bagId);
+    
+    // Generate filename
+    const filename = `qr-${bagId}.png`;
+    
+    // Upload to Supabase Storage
+    const { data, error } = await supabase.storage
+      .from(BUCKET_NAME)
+      .upload(filename, qrBlob, {
+        contentType: 'image/png',
+        cacheControl: '3600',
+        upsert: true // Allow overwrite if regenerating
+      });
+    
+    if (error) throw error;
+    
+    // Get public URL
+    const { data: { publicUrl } } = supabase.storage
+      .from(BUCKET_NAME)
+      .getPublicUrl(filename);
+    
+    return publicUrl;
+  } catch (error) {
+    console.error('Error generating/uploading QR code:', error);
+    throw error;
+  }
+};
+
+/**
+ * Delete QR code from Supabase Storage
+ * @param {string} qrUrl - URL of the QR code to delete
+ */
+export const deleteQRCode = async (qrUrl) => {
+  if (!useSupabase() || !qrUrl) return;
+  
+  try {
+    // Extract filename from URL
+    const url = new URL(qrUrl);
+    const pathParts = url.pathname.split('/');
+    const filename = pathParts[pathParts.length - 1];
+    
+    const { error } = await supabase.storage
+      .from(BUCKET_NAME)
+      .remove([filename]);
+    
+    if (error) throw error;
+  } catch (error) {
+    console.error('Error deleting QR code:', error);
+    // Don't throw - deletion failure shouldn't block other operations
+  }
+};
+
 // ============= BAGS =============
 
 
@@ -88,6 +151,7 @@ export const fetchBags = async () => {
     id: bag.id,
     name: bag.name,
     photo: bag.photo_url,
+    qrCode: bag.qr_code_url,
     loaded: bag.loaded,
     items: bag.items.map(item => ({
       id: item.id,
@@ -111,6 +175,7 @@ export const createBag = async (bag) => {
     .insert([{
       name: bag.name,
       photo_url: bag.photo,
+      qr_code_url: bag.qrCode,
       loaded: false
     }])
     .select()
@@ -122,6 +187,7 @@ export const createBag = async (bag) => {
     id: data.id,
     name: data.name,
     photo: data.photo_url,
+    qrCode: data.qr_code_url,
     loaded: data.loaded,
     items: [],
     createdAt: data.created_at
@@ -134,6 +200,7 @@ export const updateBag = async (bagId, updates) => {
   const dbUpdates = {};
   if (updates.name !== undefined) dbUpdates.name = updates.name;
   if (updates.photo !== undefined) dbUpdates.photo_url = updates.photo;
+  if (updates.qrCode !== undefined) dbUpdates.qr_code_url = updates.qrCode;
   if (updates.loaded !== undefined) dbUpdates.loaded = updates.loaded;
   
   const { data, error } = await supabase
