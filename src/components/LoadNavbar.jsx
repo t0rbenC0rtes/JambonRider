@@ -13,9 +13,9 @@ const LoadNavbar = () => {
   
   const handleBack = () => {
     if (isLoadHome) {
-      navigate('/');
+      navigate('/', { replace: true });
     } else {
-      navigate('/load');
+      navigate('/load', { replace: true });
     }
   };
   
