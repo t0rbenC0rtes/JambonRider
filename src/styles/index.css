@@ -217,7 +217,7 @@ input::placeholder, textarea::placeholder {
 /* Mobile Responsive */
 @media (max-width: 768px) {
   :root {
-    font-size: 14px;
+    font-size: 1rem;
   }
   
   h1 { font-size: 1.75rem; }
