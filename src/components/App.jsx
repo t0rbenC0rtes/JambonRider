@@ -7,6 +7,7 @@ import Homepage from './Homepage';
 import Login from './Login';
 import BagsPage from './BagsPage';
 import BagDetail from './BagDetail';
+import LayoutsPage from './LayoutsPage';
 import LoadMode from './LoadMode';
 import LoadBagDetail from './LoadBagDetail';
 import '../styles/App.css';
@@ -27,14 +28,16 @@ const AdminRoute = ({ children }) => {
 };
 
 function App() {
-  const { isAuthenticated, checkAuth, loadBags } = useStore();
+  const { isAuthenticated, checkAuth, loadBags, loadLayouts } = useStore();
 
   useEffect(() => {
     // Check auth status on mount
     checkAuth();
     // Load bags from Supabase/localStorage
     loadBags();
-  }, [checkAuth, loadBags]);
+    // Load layouts from Supabase
+    loadLayouts();
+  }, [checkAuth, loadBags, loadLayouts]);
 
   return (
     <BrowserRouter>
@@ -62,6 +65,15 @@ function App() {
             <>
               <Navbar />
               <BagDetail />
+            </>
+          </AdminRoute>
+        } />
+        
+        <Route path="/admin/layouts" element={
+          <AdminRoute>
+            <>
+              <Navbar />
+              <LayoutsPage />
             </>
           </AdminRoute>
         } />

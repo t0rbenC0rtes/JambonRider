@@ -28,9 +28,12 @@ export const useStore = create((set, get) => ({
   
   // Data state
   bags: [],
+  layouts: [],
+  activeLayout: null,
   isLoading: false,
   error: null,
   realtimeChannel: null,
+  layoutsChannel: null,
   
   // Auth actions
   login: (password) => {
@@ -477,9 +480,144 @@ export const useStore = create((set, get) => ({
     }
   },
   
+  // Layout actions
+  loadLayouts: async () => {
+    try {
+      if (useSupabase()) {
+        const layouts = await supabaseHelpers.fetchLayouts();
+        if (layouts) {
+          const activeLayout = layouts.find(l => l.isActive);
+          set({ layouts, activeLayout });
+          get().subscribeToLayouts();
+        }
+      }
+    } catch (error) {
+      console.error('Error loading layouts:', error);
+      set({ error: error.message });
+    }
+  },
+  
+  addLayout: async (layout) => {
+    try {
+      if (useSupabase()) {
+        const newLayout = await supabaseHelpers.createLayout(layout);
+        set((state) => ({
+          layouts: [...state.layouts, newLayout]
+        }));
+        return newLayout;
+      }
+    } catch (error) {
+      console.error('Error adding layout:', error);
+      throw error;
+    }
+  },
+  
+  updateLayout: async (layoutId, updates) => {
+    try {
+      if (useSupabase()) {
+        await supabaseHelpers.updateLayout(layoutId, updates);
+        set((state) => ({
+          layouts: state.layouts.map(layout =>
+            layout.id === layoutId ? { ...layout, ...updates } : layout
+          )
+        }));
+      }
+    } catch (error) {
+      console.error('Error updating layout:', error);
+      throw error;
+    }
+  },
+  
+  deleteLayout: async (layoutId) => {
+    try {
+      if (useSupabase()) {
+        await supabaseHelpers.deleteLayout(layoutId);
+        set((state) => ({
+          layouts: state.layouts.filter(layout => layout.id !== layoutId),
+          activeLayout: state.activeLayout?.id === layoutId ? null : state.activeLayout
+        }));
+      }
+    } catch (error) {
+      console.error('Error deleting layout:', error);
+      throw error;
+    }
+  },
+  
+  setActiveLayout: async (layoutId) => {
+    try {
+      if (useSupabase()) {
+        await supabaseHelpers.setActiveLayout(layoutId);
+        
+        // Uncheck all items when switching layouts
+        const { bags } = get();
+        for (const bag of bags) {
+          for (const item of bag.items) {
+            if (item.checked) {
+              await get().updateItem(bag.id, item.id, { checked: false });
+            }
+          }
+          // Also unload all bags
+          if (bag.loaded) {
+            await get().updateBag(bag.id, { loaded: false });
+          }
+        }
+        
+        const newActiveLayout = layoutId ? get().layouts.find(l => l.id === layoutId) : null;
+        set((state) => ({
+          layouts: state.layouts.map(layout => ({
+            ...layout,
+            isActive: layout.id === layoutId
+          })),
+          activeLayout: newActiveLayout
+        }));
+      }
+    } catch (error) {
+      console.error('Error setting active layout:', error);
+      throw error;
+    }
+  },
+  
+  getFilteredBags: () => {
+    const { bags, activeLayout } = get();
+    if (!activeLayout || activeLayout.bagIds.length === 0) {
+      return bags; // Return all bags if no active layout
+    }
+    return bags.filter(bag => activeLayout.bagIds.includes(bag.id));
+  },
+  
+  getLayoutCompletion: (layoutId) => {
+    const { bags, layouts } = get();
+    const layout = layouts.find(l => l.id === layoutId);
+    if (!layout) return 0;
+    
+    const layoutBags = bags.filter(bag => layout.bagIds.includes(bag.id));
+    if (layoutBags.length === 0) return 0;
+    
+    const loadedBags = layoutBags.filter(bag => bag.loaded).length;
+    return Math.round((loadedBags / layoutBags.length) * 100);
+  },
+  
+  subscribeToLayouts: () => {
+    if (!useSupabase()) return;
+    
+    const channel = supabaseHelpers.subscribeToLayouts(() => {
+      get().loadLayouts();
+    });
+    
+    set({ layoutsChannel: channel });
+  },
+  
+  unsubscribeFromLayouts: () => {
+    const { layoutsChannel } = get();
+    if (layoutsChannel) {
+      supabaseHelpers.unsubscribeFromBags(layoutsChannel);
+      set({ layoutsChannel: null });
+    }
+  },
+  
   // Reset all data (for testing)
   resetData: () => {
-    set({ bags: [] });
+    set({ bags: [], layouts: [], activeLayout: null });
     localStorage.removeItem('jambon_bags');
   }
 }));

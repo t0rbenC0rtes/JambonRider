@@ -48,12 +48,20 @@ const BagsPage = () => {
     <div className="bags-page">
       <div className="bags-header">
         <h2 className="bags-title">Mes Sacs</h2>
-        <button 
-          className="primary"
-          onClick={() => setShowAddModal(true)}
-        >
-          + Ajouter un sac
-        </button>
+        <div className="bags-header-actions">
+          <button 
+            className="secondary"
+            onClick={() => navigate('/admin/layouts')}
+          >
+            📋 Gérer les layouts
+          </button>
+          <button 
+            className="primary"
+            onClick={() => setShowAddModal(true)}
+          >
+            + Ajouter un sac
+          </button>
+        </div>
       </div>
       
       {bags.length === 0 ? (

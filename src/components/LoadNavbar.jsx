@@ -1,11 +1,15 @@
 import { useNavigate, useLocation } from 'react-router-dom';
+import { useStore } from '../store/useStore';
 import './Navbar.css';
 
 const LoadNavbar = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { activeLayout } = useStore();
   
   const isLoadHome = location.pathname === '/load';
+  
+  const layoutName = activeLayout ? activeLayout.name : 'Tous les sacs';
   
   const handleBack = () => {
     if (isLoadHome) {
@@ -20,7 +24,7 @@ const LoadNavbar = () => {
       <div className="navbar-content">
         <div className="navbar-brand">
           
-          <h1 className="navbar-title">JambonRider - Chargement</h1>
+          <h1 className="navbar-title">JambonRider - {layoutName}</h1>
         </div>
         
         <div className="navbar-actions">

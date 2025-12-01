@@ -4,7 +4,9 @@ import './LoadMode.css';
 
 const LoadMode = () => {
   const navigate = useNavigate();
-  const { bags, getBagStatus } = useStore();
+  const { getFilteredBags, getBagStatus } = useStore();
+  
+  const bags = getFilteredBags();
   
   const handleBagClick = (bagId) => {
     navigate(`/load/bag/${bagId}`);

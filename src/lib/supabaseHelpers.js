@@ -249,3 +249,111 @@ export const unsubscribeFromBags = (channel) => {
     supabase.removeChannel(channel);
   }
 };
+
+// ============= LAYOUTS =============
+
+export const fetchLayouts = async () => {
+  if (!useSupabase()) return null;
+  
+  const { data, error } = await supabase
+    .from('layouts')
+    .select('*')
+    .order('created_at', { ascending: false });
+  
+  if (error) throw error;
+  
+  return data.map(layout => ({
+    id: layout.id,
+    name: layout.name,
+    bagIds: layout.bag_ids,
+    isActive: layout.is_active,
+    createdAt: layout.created_at,
+    updatedAt: layout.updated_at
+  }));
+};
+
+export const createLayout = async (layout) => {
+  if (!useSupabase()) return null;
+  
+  const { data, error } = await supabase
+    .from('layouts')
+    .insert([{
+      name: layout.name,
+      bag_ids: layout.bagIds,
+      is_active: layout.isActive || false
+    }])
+    .select()
+    .single();
+  
+  if (error) throw error;
+  
+  return {
+    id: data.id,
+    name: data.name,
+    bagIds: data.bag_ids,
+    isActive: data.is_active,
+    createdAt: data.created_at,
+    updatedAt: data.updated_at
+  };
+};
+
+export const updateLayout = async (layoutId, updates) => {
+  if (!useSupabase()) return null;
+  
+  const dbUpdates = {};
+  if (updates.name !== undefined) dbUpdates.name = updates.name;
+  if (updates.bagIds !== undefined) dbUpdates.bag_ids = updates.bagIds;
+  if (updates.isActive !== undefined) dbUpdates.is_active = updates.isActive;
+  
+  const { error } = await supabase
+    .from('layouts')
+    .update(dbUpdates)
+    .eq('id', layoutId);
+  
+  if (error) throw error;
+};
+
+export const deleteLayout = async (layoutId) => {
+  if (!useSupabase()) return null;
+  
+  const { error } = await supabase
+    .from('layouts')
+    .delete()
+    .eq('id', layoutId);
+  
+  if (error) throw error;
+};
+
+export const setActiveLayout = async (layoutId) => {
+  if (!useSupabase()) return null;
+  
+  // First, deactivate all layouts
+  await supabase
+    .from('layouts')
+    .update({ is_active: false })
+    .neq('id', '00000000-0000-0000-0000-000000000000'); // Update all
+  
+  // Then activate the selected one (null = deactivate all)
+  if (layoutId) {
+    const { error } = await supabase
+      .from('layouts')
+      .update({ is_active: true })
+      .eq('id', layoutId);
+    
+    if (error) throw error;
+  }
+};
+
+export const subscribeToLayouts = (callback) => {
+  if (!useSupabase()) return null;
+  
+  const channel = supabase
+    .channel('layouts-changes')
+    .on('postgres_changes',
+      { event: '*', schema: 'public', table: 'layouts' },
+      callback
+    )
+    .subscribe();
+  
+  return channel;
+};
